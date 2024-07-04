@@ -8,6 +8,7 @@ use App\Models\ChatDetailModel;
 use Illuminate\Support\Facades\Validator;
 use App\Http\Controllers\FirebaseController;
 use App\Models\FcmTokenModel;
+use App\Models\User;
 use DB;
 
 class ChatController extends Controller
@@ -16,12 +17,15 @@ class ChatController extends Controller
     protected $modelDetailChat;
     protected $firebaseNotification;
     protected $tokenModel;
+
+    protected $modelUser;
     public function __construct(FirebaseController $firebaseController)
     {
         $this->modelChat = new ChatModel();
         $this->modelDetailChat = new ChatDetailModel();
         $this->firebaseNotification = $firebaseController;
         $this->tokenModel = new FcmTokenModel();
+        $this->modelUser = new User();
     }
 
    public function getChat(Request $request)
@@ -113,6 +117,7 @@ class ChatController extends Controller
             return response()->json($validator->errors(), 200);
         }
         $detailChat = $this->modelDetailChat;
+        $user = $this->modelUser->where('id', $request->id_user)->first();
         $chat = $this->modelChat->where('id', $request->id_chat)->first();
         if ($chat) {
             $usersInChat = json_decode($chat->id_user, true);
@@ -126,7 +131,7 @@ class ChatController extends Controller
                 foreach ($modelToken as $token) {
                     $messageData = [
                         'token' => $token->token,
-                        'title' => 'Pesan Baru',
+                        'title' => 'Pesan Baru'. ' '.$user->name,
                         'body' => $request->message,
                         'data' => [
                             'message' => $request->message,
